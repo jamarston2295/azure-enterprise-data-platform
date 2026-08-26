@@ -21,7 +21,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
   }
 }
 
-resource keyVault 'Microsoft.KeyVault/vaults@2024-12-01' = {
+resource keyVault 'Microsoft.KeyVault/vaults@2025-05-01' = {
   name: keyVaultName
   location: location
   properties: {
