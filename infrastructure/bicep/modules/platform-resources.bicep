@@ -6,6 +6,10 @@ param keyVaultName string
 
 param logAnalyticsWorkspaceName string
 
+// -----------------------------------------------------------------------------
+// ADLS Gen2 Storage Account
+// -----------------------------------------------------------------------------
+
 resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
   name: storageAccountName
   location: location
@@ -20,6 +24,42 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2025-01-01' = {
     supportsHttpsTrafficOnly: true
   }
 }
+
+// -----------------------------------------------------------------------------
+// ADLS Gen2 Containers
+// -----------------------------------------------------------------------------
+
+resource rawContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
+  name: '${storageAccount.name}/default/raw'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource bronzeContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
+  name: '${storageAccount.name}/default/bronze'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource silverContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
+  name: '${storageAccount.name}/default/silver'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource goldContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2025-01-01' = {
+  name: '${storageAccount.name}/default/gold'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Key Vault
+// -----------------------------------------------------------------------------
 
 resource keyVault 'Microsoft.KeyVault/vaults@2025-05-01' = {
   name: keyVaultName
@@ -36,6 +76,10 @@ resource keyVault 'Microsoft.KeyVault/vaults@2025-05-01' = {
     publicNetworkAccess: 'Enabled'
   }
 }
+
+// -----------------------------------------------------------------------------
+// Log Analytics
+// -----------------------------------------------------------------------------
 
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
   name: logAnalyticsWorkspaceName
