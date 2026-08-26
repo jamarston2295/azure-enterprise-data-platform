@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.46.1.21595",
-      "templateHash": "18272447108599753787"
+      "templateHash": "12506738315336506767"
     }
   },
   "parameters": {
@@ -90,7 +90,7 @@
             "_generator": {
               "name": "bicep",
               "version": "0.46.1.21595",
-              "templateHash": "3105424343037106843"
+              "templateHash": "10126970389802147019"
             }
           },
           "parameters": {
@@ -125,8 +125,52 @@
               }
             },
             {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2025-01-01",
+              "name": "[format('{0}/default/raw', parameters('storageAccountName'))]",
+              "properties": {
+                "publicAccess": "None"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2025-01-01",
+              "name": "[format('{0}/default/bronze', parameters('storageAccountName'))]",
+              "properties": {
+                "publicAccess": "None"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2025-01-01",
+              "name": "[format('{0}/default/silver', parameters('storageAccountName'))]",
+              "properties": {
+                "publicAccess": "None"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2025-01-01",
+              "name": "[format('{0}/default/gold', parameters('storageAccountName'))]",
+              "properties": {
+                "publicAccess": "None"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+              ]
+            },
+            {
               "type": "Microsoft.KeyVault/vaults",
-              "apiVersion": "2024-12-01",
+              "apiVersion": "2025-05-01",
               "name": "[parameters('keyVaultName')]",
               "location": "[parameters('location')]",
               "properties": {
