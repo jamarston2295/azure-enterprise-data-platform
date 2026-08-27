@@ -96,11 +96,6 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2025-02-01' = {
 // Managed Identities
 // -----------------------------------------------------------------------------
 
-resource adfManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
-  name: 'id-adf-${uniqueString(resourceGroup().id)}'
-  location: location
-}
-
 resource databricksManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' = {
   name: 'id-databricks-${uniqueString(resourceGroup().id)}'
   location: location
@@ -110,11 +105,11 @@ resource databricksManagedIdentity 'Microsoft.ManagedIdentity/userAssignedIdenti
 // RBAC - ADLS Gen2
 // -----------------------------------------------------------------------------
 
-resource adfStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(storageAccount.id, adfManagedIdentity.id, 'Storage Blob Data Contributor')
+resource databricksStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, databricksManagedIdentity.id, 'Storage Blob Data Contributor')
   scope: storageAccount
   properties: {
-    principalId: adfManagedIdentity.properties.principalId
+    principalId: databricksManagedIdentity.properties.principalId
     roleDefinitionId: subscriptionResourceId(
       'Microsoft.Authorization/roleDefinitions',
       'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
@@ -123,11 +118,31 @@ resource adfStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
-resource databricksStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(storageAccount.id, databricksManagedIdentity.id, 'Storage Blob Data Contributor')
+// -----------------------------------------------------------------------------
+// Azure Data Factory
+// -----------------------------------------------------------------------------
+
+resource dataFactory 'Microsoft.DataFactory/factories@2018-06-01' = {
+  name: 'adf-azure-data-platform-${uniqueString(resourceGroup().id)}'
+  location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
+}
+
+// -----------------------------------------------------------------------------
+// RBAC - Data Factory access to ADLS Gen2
+// -----------------------------------------------------------------------------
+
+resource dataFactoryStorageRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(
+    storageAccount.id,
+    dataFactory.id,
+    'Storage Blob Data Contributor'
+  )
   scope: storageAccount
   properties: {
-    principalId: databricksManagedIdentity.properties.principalId
+    principalId: dataFactory.identity.principalId
     roleDefinitionId: subscriptionResourceId(
       'Microsoft.Authorization/roleDefinitions',
       'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
