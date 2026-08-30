@@ -1,0 +1,24 @@
+{
+	"name": "ds_carbon_intensity_api",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "ls_carbon_intensity_api",
+			"type": "LinkedServiceReference"
+		},
+		"parameters": {
+			"ingestion_date": {
+				"type": "string"
+			}
+		},
+		"annotations": [],
+		"type": "RestResource",
+		"typeProperties": {
+			"relativeUrl": {
+				"value": "@concat('/intensity/date/', dataset().ingestion_date)",
+				"type": "Expression"
+			}
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

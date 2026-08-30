@@ -1,0 +1,15 @@
+{
+	"name": "adf-azure-data-platform-kgij5ooloiyyo",
+	"properties": {
+		"trustModeClaimForMi": {
+			"value": "Disabled",
+			"editable": true
+		}
+	},
+	"location": "uksouth",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "ec80f2ce-70e1-49b5-817a-8debc74d74a2",
+		"tenantId": "34c2406d-0370-4a40-95b6-6bd873f76b80"
+	}
+}

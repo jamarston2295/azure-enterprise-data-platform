@@ -1,0 +1,74 @@
+{
+	"name": "pl_ingest_carbon_intensity",
+	"properties": {
+		"activities": [
+			{
+				"name": "Copy Carbon Intensity API",
+				"type": "Copy",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "RestSource",
+						"httpRequestTimeout": "00:01:40",
+						"requestInterval": "00.00:00:00.010",
+						"requestMethod": "GET",
+						"paginationRules": {
+							"supportRFC5988": "true"
+						}
+					},
+					"sink": {
+						"type": "JsonSink",
+						"storeSettings": {
+							"type": "AzureBlobFSWriteSettings"
+						},
+						"formatSettings": {
+							"type": "JsonWriteSettings"
+						}
+					},
+					"enableStaging": false
+				},
+				"inputs": [
+					{
+						"referenceName": "ds_carbon_intensity_api",
+						"type": "DatasetReference",
+						"parameters": {
+							"ingestion_date": {
+								"value": "@pipeline().parameters.ingestion_date",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"outputs": [
+					{
+						"referenceName": "ds_adls_raw",
+						"type": "DatasetReference",
+						"parameters": {
+							"ingestion_date": {
+								"value": "@pipeline().parameters.ingestion_date",
+								"type": "Expression"
+							}
+						}
+					}
+				]
+			}
+		],
+		"parameters": {
+			"ingestion_date": {
+				"type": "string",
+				"defaultValue": "2026-08-28"
+			}
+		},
+		"annotations": [],
+		"lastPublishTime": "2026-08-30T20:32:07Z"
+	},
+	"type": "Microsoft.DataFactory/factories/pipelines"
+}
