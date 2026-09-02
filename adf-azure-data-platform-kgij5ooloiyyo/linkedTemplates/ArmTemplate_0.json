@@ -1,0 +1,223 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "adf-azure-data-platform-kgij5ooloiyyo"
+		},
+		"ls_adls_raw_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://stazuredataplatformdev.dfs.core.windows.net/"
+		},
+		"ls_carbon_intensity_api_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://api.carbonintensity.org.uk"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_adls_raw')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('ls_adls_raw_properties_typeProperties_url')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ls_carbon_intensity_api')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "RestService",
+				"typeProperties": {
+					"url": "[parameters('ls_carbon_intensity_api_properties_typeProperties_url')]",
+					"enableServerCertificateValidation": true,
+					"authenticationType": "Anonymous"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_adls_raw')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls_raw",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ingestion_date": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Json",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "carbon_intensity.json",
+						"folderPath": {
+							"value": "@concat(\n    'carbon-intensity/',\n    substring(dataset().ingestion_date, 0, 4),\n    '/',\n    substring(dataset().ingestion_date, 5, 2),\n    '/',\n    substring(dataset().ingestion_date, 8, 2)\n)",
+							"type": "Expression"
+						},
+						"fileSystem": "raw"
+					}
+				},
+				"schema": {}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls_raw')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ds_carbon_intensity_api')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_carbon_intensity_api",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"ingestion_date": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "RestResource",
+				"typeProperties": {
+					"relativeUrl": {
+						"value": "@concat('/intensity/date/', dataset().ingestion_date)",
+						"type": "Expression"
+					}
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_carbon_intensity_api')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pl_ingest_carbon_intensity')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy Carbon Intensity API",
+						"type": "Copy",
+						"dependsOn": [
+							{
+								"activity": "effective_ingestion_date",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "0.12:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "RestSource",
+								"httpRequestTimeout": "00:01:40",
+								"requestInterval": "00.00:00:00.010",
+								"requestMethod": "GET",
+								"paginationRules": {
+									"supportRFC5988": "true"
+								}
+							},
+							"sink": {
+								"type": "JsonSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "JsonWriteSettings"
+								}
+							},
+							"enableStaging": false
+						},
+						"inputs": [
+							{
+								"referenceName": "ds_carbon_intensity_api",
+								"type": "DatasetReference",
+								"parameters": {
+									"ingestion_date": {
+										"value": "@variables('effective_ingestion_date')",
+										"type": "Expression"
+									}
+								}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "ds_adls_raw",
+								"type": "DatasetReference",
+								"parameters": {
+									"ingestion_date": {
+										"value": "@variables('effective_ingestion_date')",
+										"type": "Expression"
+									}
+								}
+							}
+						]
+					},
+					{
+						"name": "effective_ingestion_date",
+						"type": "SetVariable",
+						"dependsOn": [],
+						"policy": {
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"variableName": "effective_ingestion_date",
+							"value": {
+								"value": "@if(\n    empty(pipeline().parameters.ingestion_date),\n    formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd'),\n    pipeline().parameters.ingestion_date\n)",
+								"type": "Expression"
+							}
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"ingestion_date": {
+						"type": "string"
+					}
+				},
+				"variables": {
+					"effective_ingestion_date": {
+						"type": "String"
+					}
+				},
+				"annotations": [],
+				"lastPublishTime": "2026-09-01T14:59:16Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/ds_carbon_intensity_api')]",
+				"[concat(variables('factoryId'), '/datasets/ds_adls_raw')]"
+			]
+		}
+	]
+}
