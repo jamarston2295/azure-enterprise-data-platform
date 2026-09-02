@@ -5,7 +5,14 @@
 			{
 				"name": "Copy Carbon Intensity API",
 				"type": "Copy",
-				"dependsOn": [],
+				"dependsOn": [
+					{
+						"activity": "effective_ingestion_date",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
 				"policy": {
 					"timeout": "0.12:00:00",
 					"retry": 0,
@@ -41,7 +48,7 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"ingestion_date": {
-								"value": "@pipeline().parameters.ingestion_date",
+								"value": "@variables('effective_ingestion_date')",
 								"type": "Expression"
 							}
 						}
@@ -53,22 +60,43 @@
 						"type": "DatasetReference",
 						"parameters": {
 							"ingestion_date": {
-								"value": "@pipeline().parameters.ingestion_date",
+								"value": "@variables('effective_ingestion_date')",
 								"type": "Expression"
 							}
 						}
 					}
 				]
+			},
+			{
+				"name": "effective_ingestion_date",
+				"type": "SetVariable",
+				"dependsOn": [],
+				"policy": {
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"variableName": "effective_ingestion_date",
+					"value": {
+						"value": "@if(\n    empty(pipeline().parameters.ingestion_date),\n    formatDateTime(addDays(utcNow(), -1), 'yyyy-MM-dd'),\n    pipeline().parameters.ingestion_date\n)",
+						"type": "Expression"
+					}
+				}
 			}
 		],
 		"parameters": {
 			"ingestion_date": {
-				"type": "string",
-				"defaultValue": "2026-08-28"
+				"type": "string"
+			}
+		},
+		"variables": {
+			"effective_ingestion_date": {
+				"type": "String"
 			}
 		},
 		"annotations": [],
-		"lastPublishTime": "2026-08-30T20:32:07Z"
+		"lastPublishTime": "2026-09-01T14:59:16Z"
 	},
 	"type": "Microsoft.DataFactory/factories/pipelines"
 }
