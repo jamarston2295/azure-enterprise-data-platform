@@ -218,6 +218,44 @@
 				"[concat(variables('factoryId'), '/datasets/ds_carbon_intensity_api')]",
 				"[concat(variables('factoryId'), '/datasets/ds_adls_raw')]"
 			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/trg_daily_carbon_intensity')]",
+			"type": "Microsoft.DataFactory/factories/triggers",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"runtimeState": "Started",
+				"pipelines": [
+					{
+						"pipelineReference": {
+							"referenceName": "pl_ingest_carbon_intensity",
+							"type": "PipelineReference"
+						},
+						"parameters": {}
+					}
+				],
+				"type": "ScheduleTrigger",
+				"typeProperties": {
+					"recurrence": {
+						"frequency": "Day",
+						"interval": 1,
+						"startTime": "2026-09-02T10:19:00",
+						"timeZone": "GMT Standard Time",
+						"schedule": {
+							"minutes": [
+								6
+							],
+							"hours": [
+								9
+							]
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/pipelines/pl_ingest_carbon_intensity')]"
+			]
 		}
 	]
 }
