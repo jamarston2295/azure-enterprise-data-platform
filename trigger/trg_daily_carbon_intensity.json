@@ -20,10 +20,10 @@
 				"timeZone": "GMT Standard Time",
 				"schedule": {
 					"minutes": [
-						6
+						0
 					],
 					"hours": [
-						9
+						6
 					]
 				}
 			}
